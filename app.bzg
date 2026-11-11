@@ -1,0 +1,36 @@
+include("lib/http.bzg");
+
+var server = http(8000);
+
+// Serve the chat page at the root URL.
+// Any other path receives the custom 404 page.
+server.get = function (path, data) {
+  print("HTTP request: " + path);
+
+  if (path == "/") {
+    server.sendFile("public/index.html");
+  }
+  else {
+    server.sendFile("public/404.html");
+  }
+};
+
+// A newly connected browser receives a welcome message.
+server.onConnect = function (clientId) {
+  print("WebSocket connected. Client ID: " + clientId);
+  server.send(clientId, "You are connected to the chat server.");
+};
+
+// Broadcast each message to every connected browser.
+server.onData = function (message, clientId) {
+  print("Message from client " + clientId + ": " + message);
+  server.sendAll("User " + clientId + ": " + message);
+};
+
+// Log disconnections in the server terminal.
+server.onDisconnect = function (clientId) {
+  print("WebSocket disconnected. Client ID: " + clientId);
+};
+
+print("Starting HTTP and WebSocket server on port 8000...");
+server.run();
